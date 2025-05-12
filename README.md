@@ -30,11 +30,11 @@ A modern mobile banking application built with Flutter that provides a clean and
 ### Installation
 
 1. Clone this repository:
-```bash
+
 git clone https://github.com/yourusername/pretiumfinance.git
 
 2. Navigate to the project directory:
-'''bash
+
 cd pretiumfinance
 
 3. Install dependencies:
@@ -73,9 +73,6 @@ flutter build apk --release
 # For iOS
 flutter build ios --release
 
-
-GitHub Copilot
-I'll create a complete and properly formatted README.md file for your project, with all numbered steps properly formatted:
 
 Navigate to the project directory:
 Install dependencies:
