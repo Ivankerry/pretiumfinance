@@ -1,16 +1,98 @@
-# pretiumfinance
+# Pretium Finance
 
-A new Flutter project.
+A modern mobile banking application built with Flutter that provides a clean and intuitive interface for financial management.
+
+## Features
+
+- **Secure Authentication**: PIN-based login system with visibility toggle
+- **Account Dashboard**: View account balances with hide/show functionality
+- **Financial Services**: Send money, buy goods, pay bills, and purchase airtime
+- **QR Code Payments**: Quick access to scan and pay functionality
+- **Transaction History**: View all past transactions in an organized manner
+
+## Screenshots
+
+- Splash Screen
+- Onboarding Pages
+- Login/Authentication
+- Home Dashboard
+- Transaction History
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+### Prerequisites
 
-A few resources to get you started if this is your first Flutter project:
+- [Flutter](https://flutter.dev/docs/get-started/install) 3.7.0 or higher
+- [Dart](https://dart.dev/get-dart) 3.0.0 or higher
+- Android Studio / VS Code
+- Android SDK / iOS Development Tools
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### Installation
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+1. Clone this repository:
+```bash
+git clone https://github.com/yourusername/pretiumfinance.git
+
+2. Navigate to the project directory:
+'''bash
+cd pretiumfinance
+
+3. Install dependencies:
+        flutter pub get
+
+4. Create assets folder and add required assets:
+mkdir -p assets
+# Add your splash_screen.jpg and other assets to this folder
+
+5. Run the application:
+flutter run
+
+## Project Structure
+
+lib/
+├── main.dart                  # Entry point
+├── pages/
+│   ├── splash_screen.dart     # Initial loading screen
+│   ├── onboarding_screen.dart # First-time user tutorials
+│   ├── login_page.dart        # Authentication screen
+│   ├── pin_verification_page.dart # Security PIN setup
+│   ├── landing_page.dart      # Home screen/dashboard
+│   ├── transactions_page.dart # Transaction history
+│   └── forgot_password_page.dart # Password recovery
+├── widgets/
+│   └── floating_text_field.dart # Custom text input component
+└── utils/
+    └── constants.dart         # App-wide constants
+
+Building for Production
+To build the release version of the app:
+
+# For Android
+flutter build apk --release
+
+# For iOS
+flutter build ios --release
+
+
+GitHub Copilot
+I'll create a complete and properly formatted README.md file for your project, with all numbered steps properly formatted:
+
+Navigate to the project directory:
+Install dependencies:
+Create assets folder and add required assets:
+Run the application:
+Project Structure
+Building for Production
+To build the release version of the app:
+
+Troubleshooting
+Kotlin Daemon Error
+If you encounter "Could not connect to Kotlin compile daemon" error:
+
+Clean the project:
+
+flutter clean
+cd android
+./gradlew clean
+cd ..
+flutter pub get
