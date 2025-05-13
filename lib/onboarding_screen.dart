@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'pages/login_page.dart'; // Add this import
+import 'pages/login_page.dart';
 
 // Main onboarding page widget
 class OnboardingScreen extends StatefulWidget {
