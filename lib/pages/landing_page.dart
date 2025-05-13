@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'transactions_page.dart';
+import 'side_menu_bar_page.dart'; // Add this import for ProfileScreen
 
 class MobileBankingHomeScreen extends StatefulWidget {
   const MobileBankingHomeScreen({Key? key}) : super(key: key);
@@ -43,14 +44,22 @@ class _MobileBankingHomeScreenState extends State<MobileBankingHomeScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Profile Circular Avatar
-                CircleAvatar(
-                  backgroundColor: Colors.white,
-                  child: Text(
-                    'K',
-                    style: TextStyle(
-                      color: const Color(0xFF128C7E),
-                      fontWeight: FontWeight.bold,
+                // Profile Circular Avatar with GestureDetector
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => ProfileScreen()),
+                    );
+                  },
+                  child: CircleAvatar(
+                    backgroundColor: Colors.white,
+                    child: Text(
+                      'K',
+                      style: TextStyle(
+                        color: const Color(0xFF128C7E),
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
