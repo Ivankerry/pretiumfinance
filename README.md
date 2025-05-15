@@ -86,7 +86,7 @@ Troubleshooting
 Kotlin Daemon Error
 If you encounter "Could not connect to Kotlin compile daemon" error:
 
-Clean the project:
+To clean the project:
 
 flutter clean
 cd android
