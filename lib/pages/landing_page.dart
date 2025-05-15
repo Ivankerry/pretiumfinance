@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'transactions_page.dart';
 import 'side_menu_bar_page.dart'; // Add this import for ProfileScreen
 
@@ -13,441 +14,485 @@ class MobileBankingHomeScreen extends StatefulWidget {
 
 class _MobileBankingHomeScreenState extends State<MobileBankingHomeScreen> {
   bool _balanceVisible = true;
+  double _accountBalance = 0.0;
+  String _currency = 'USD';
+  List<Map<String, dynamic>> _transactions = [];
+  bool _isLoading = true; // Add a loading state
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchData();
+  }
+
+  // Fetch both account balance and transaction history
+  Future<void> _fetchData() async {
+    try {
+      await Future.wait([_fetchAccountBalance(), _fetchTransactionHistory()]);
+    } catch (e) {
+      print('Error fetching data: $e');
+    } finally {
+      setState(() {
+        _isLoading = false; // Set loading to false after fetching data
+      });
+    }
+  }
+
+  // Fetch account balance from the API
+  Future<void> _fetchAccountBalance() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://192.168.239.46:3000/api/balance/user123'),
+      );
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          _accountBalance = data['balance'];
+          _currency = data['currency'];
+        });
+      } else {
+        print('Failed to fetch account balance');
+      }
+    } catch (e) {
+      print('Error fetching account balance: $e');
+    }
+  }
+
+  // Fetch transaction history from the API
+  Future<void> _fetchTransactionHistory() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://192.168.239.46:3000/api/transactions/user123'),
+      );
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          _transactions = List<Map<String, dynamic>>.from(data);
+        });
+      } else {
+        print('Failed to fetch transaction history');
+      }
+    } catch (e) {
+      print('Error fetching transaction history: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Top App Bar - extends edge to edge, including status bar
-          Container(
-            width: double.infinity,
-            // Add extra padding at the top to account for status bar height
-            padding: EdgeInsets.only(
-              top: MediaQuery.of(context).padding.top + 12.0,
-              bottom: 12.0,
-              left: 16.0,
-              right: 16.0,
-            ),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  const Color(0xFF128C7E),
-                  const Color(0xFF128C7E).withOpacity(0.8),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Profile Circular Avatar with GestureDetector
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => ProfileScreen()),
-                    );
-                  },
-                  child: CircleAvatar(
-                    backgroundColor: Colors.white,
-                    child: Text(
-                      'K',
-                      style: TextStyle(
-                        color: const Color(0xFF128C7E),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-
-                // Centered Greeting
-                Expanded(
-                  child: Center(
-                    child: RichText(
-                      text: TextSpan(
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.white,
-                        ),
-                        children: [TextSpan(text: 'Hello, Kerry 👋')],
-                      ),
-                    ),
-                  ),
-                ),
-
-                // Notification Icon
-                Icon(Icons.notifications_none_outlined, color: Colors.white),
-              ],
-            ),
-          ),
-
-          // Wallet Balance Card
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-              vertical: 8.0,
-            ),
-            child: Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      const Color(0xFF128C7E),
-                      const Color(0xFF128C7E).withOpacity(0.8),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                padding: const EdgeInsets.all(16.0),
+      body:
+          _isLoading
+              ? Center(
+                child: CircularProgressIndicator(),
+              ) // Show loading indicator
+              : SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Icons row - wallet icon and visibility icon with circular backgrounds
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // Wallet icon with rectangular background and rounded corners
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
+                    // Top App Bar - extends edge to edge, including status bar
+                    Container(
+                      width: double.infinity,
+                      // Add extra padding at the top to account for status bar height
+                      padding: EdgeInsets.only(
+                        top: MediaQuery.of(context).padding.top + 12.0,
+                        bottom: 12.0,
+                        left: 16.0,
+                        right: 16.0,
+                      ),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            const Color(0xFF128C7E),
+                            const Color(0xFF128C7E).withOpacity(0.8),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // Profile Circular Avatar with GestureDetector
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ProfileScreen(),
+                                ),
+                              );
+                            },
+                            child: CircleAvatar(
+                              backgroundColor: Colors.white,
+                              child: Text(
+                                'K',
+                                style: TextStyle(
+                                  color: const Color(0xFF128C7E),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
                           ),
+
+                          // Centered Greeting
+                          Expanded(
+                            child: Center(
+                              child: RichText(
+                                text: TextSpan(
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.white,
+                                  ),
+                                  children: [TextSpan(text: 'Hello, Kerry 👋')],
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          // Notification Icon
+                          Icon(
+                            Icons.notifications_none_outlined,
+                            color: Colors.white,
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Wallet Balance Card
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0,
+                        vertical: 8.0,
+                      ),
+                      child: Card(
+                        elevation: 4,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Container(
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(
-                              12,
-                            ), // Rounded corners
+                            gradient: LinearGradient(
+                              colors: [
+                                const Color(0xFF128C7E),
+                                const Color(0xFF128C7E).withOpacity(0.8),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(
-                                Icons.account_balance_wallet,
-                                color: Colors.white,
-                                size: 24,
+                              // Icons row - wallet icon and visibility icon with circular backgrounds
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  // Wallet icon with rectangular background and rounded corners
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 8,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.15),
+                                      borderRadius: BorderRadius.circular(
+                                        12,
+                                      ), // Rounded corners
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.account_balance_wallet,
+                                          color: Colors.white,
+                                          size: 24,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  // Visibility icon with circular background
+                                  GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        _balanceVisible = !_balanceVisible;
+                                      });
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.15),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(
+                                        _balanceVisible
+                                            ? Icons.visibility_outlined
+                                            : Icons.visibility_off_outlined,
+                                        color: Colors.white,
+                                        size: 24,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              if (_balanceVisible)
+                                // Visible mode layout
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 4.0),
+                                      child: Text(
+                                        'Wallet Balance',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 8.0,
+                                      ),
+                                      child: Text(
+                                        '$_currency ${_accountBalance.toStringAsFixed(2)}',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              else
+                                // Hidden mode layout
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    SizedBox(height: 40),
+                                    Text(
+                                      'Wallet Balance',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      '****',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // Financial Services
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Card(
+                        elevation: 4,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Financial Services',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  Row(
+                                    children: [
+                                      Text('Kenya'),
+                                      Icon(Icons.arrow_drop_down),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 24),
+                              // First row: Send Money, Buy Goods, Paybill
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  // Wrapped each service icon in Expanded with padding for better spacing
+                                  Expanded(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8.0,
+                                      ),
+                                      child: _buildServiceIcon(
+                                        Icons.send,
+                                        'Send Money',
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8.0,
+                                      ),
+                                      child: _buildServiceIcon(
+                                        Icons.shopping_basket,
+                                        'Buy Goods',
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8.0,
+                                      ),
+                                      child: _buildServiceIcon(
+                                        Icons.receipt,
+                                        'Paybill',
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 24),
+
+                              Padding(
+                                padding: const EdgeInsets.only(left: 8.0),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: _buildServiceIcon(
+                                        Icons.phone_android,
+                                        'Airtime',
+                                      ),
+                                    ),
+                                    // Empty expanded widgets to maintain alignment
+                                    Expanded(child: Container()),
+                                    Expanded(child: Container()),
+                                  ],
+                                ),
                               ),
                             ],
                           ),
                         ),
-                        const SizedBox(width: 16),
-                        // Visibility icon with circular background
-                        GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _balanceVisible = !_balanceVisible;
-                            });
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.15),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              _balanceVisible
-                                  ? Icons.visibility_outlined
-                                  : Icons.visibility_off_outlined,
-                              color: Colors.white,
-                              size: 24,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    if (_balanceVisible)
-                      // Visible mode layout
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(top: 4.0),
-                            child: Text(
-                              'Wallet Balance',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text(
-                              'KES 0.00',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          // USD Amount container
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.15),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              '\$ 0.00',
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.9),
-                                fontSize: 16,
-                              ),
-                            ),
-                          ),
-                        ],
-                      )
-                    else
-                      // Hidden mode layout
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Empty space to push content down
-                          SizedBox(height: 40),
-                          // Wallet Balance and masked amount
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Wallet Balance',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'KES ******',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
                       ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          // Financial Services
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Financial Services',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        Row(
-                          children: [
-                            Text('Kenya'),
-                            Icon(Icons.arrow_drop_down),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    // First row: Send Money, Buy Goods, Paybill
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        // Wrapped each service icon in Expanded with padding for better spacing
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8.0,
-                            ),
-                            child: _buildServiceIcon(Icons.send, 'Send Money'),
-                          ),
-                        ),
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8.0,
-                            ),
-                            child: _buildServiceIcon(
-                              Icons.shopping_basket,
-                              'Buy Goods',
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8.0,
-                            ),
-                            child: _buildServiceIcon(Icons.receipt, 'Paybill'),
-                          ),
-                        ),
-                      ],
                     ),
 
-                    const SizedBox(height: 24),
-
+                    // Recent Transactions Section
                     Padding(
-                      padding: const EdgeInsets.only(left: 8.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Expanded(
-                            child: _buildServiceIcon(
-                              Icons.phone_android,
-                              'Airtime',
+                          Text(
+                            'Recent Transactions',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
-                          // Empty expanded widgets to maintain alignment
-                          Expanded(child: Container()),
-                          Expanded(child: Container()),
+                          TextButton(
+                            onPressed: () {},
+                            child: Text(
+                              'See all',
+                              style: TextStyle(color: const Color(0xFF128C7E)),
+                            ),
+                          ),
                         ],
                       ),
                     ),
-                  ],
-                ),
-              ),
-            ),
-          ),
 
-          // Recent Transactions
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Recent Transactions',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                ),
-                TextButton(
-                  onPressed: () {},
-                  child: Text(
-                    'See all',
-                    style: TextStyle(color: const Color(0xFF128C7E)),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // No Transactions Placeholder
-          Expanded(
-            child: Center(
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.receipt_long_outlined,
-                      size: 80,
-                      color: Colors.grey[400],
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'No recent transactions',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                    // Displaying recent transactions
+                    ListView.builder(
+                      shrinkWrap:
+                          true, // Ensures the ListView takes only the required space
+                      physics:
+                          NeverScrollableScrollPhysics(), // Prevents nested scrolling
+                      itemCount: _transactions.length,
+                      itemBuilder: (context, index) {
+                        final transaction = _transactions[index];
+                        return ListTile(
+                          leading: Icon(
+                            transaction['type'] == 'deposit'
+                                ? Icons.arrow_downward
+                                : Icons.arrow_upward,
+                            color:
+                                transaction['type'] == 'deposit'
+                                    ? Colors.green
+                                    : Colors.red,
+                          ),
+                          title: Text(transaction['description']),
+                          subtitle: Text(transaction['date']),
+                          trailing: Text(
+                            '${transaction['type'] == 'deposit' ? '+' : '-'}${transaction['amount']} $_currency',
+                            style: TextStyle(
+                              color:
+                                  transaction['type'] == 'deposit'
+                                      ? Colors.green
+                                      : Colors.red,
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
               ),
-            ),
-          ),
-        ],
-      ),
-      // Bottom Navigation Bar
       bottomNavigationBar: BottomAppBar(
-        color: Colors.white,
-        height: 60,
-        padding: EdgeInsets.zero,
+        color: Colors.white, // Background color of the BottomAppBar
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          mainAxisAlignment:
+              MainAxisAlignment.spaceEvenly, // Space items evenly
           children: [
-            Expanded(
-              child: IconButton(
-                icon: Icon(
-                  Icons.wallet_outlined,
-                  color: const Color(0xFF128C7E),
-                ),
-                onPressed: () {},
-              ),
+            IconButton(
+              icon: Icon(Icons.wallet_outlined, color: const Color(0xFF128C7E)),
+              onPressed: () {
+                // Add navigation or functionality here
+              },
             ),
-
-            // Center QR code button (elevated)
+            // Center QR code button
             Transform.translate(
               offset: Offset(0, -15), // Move up by 15 pixels
-              child: Container(
-                height: 56,
-                width: 56,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF128C7E),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.3),
-                      spreadRadius: 1,
-                      blurRadius: 4,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: IconButton(
-                  icon: Icon(
-                    Icons.qr_code_rounded,
-                    color: Colors.white,
-                    size: 28,
-                  ),
-                  onPressed: () {},
-                ),
+              child: FloatingActionButton(
+                backgroundColor: const Color(0xFF128C7E),
+                onPressed: () {
+                  // Add QR code functionality here
+                },
+                child: Icon(Icons.qr_code_rounded, color: Colors.white),
               ),
             ),
-
-            Expanded(
-              child: IconButton(
-                icon: Icon(Icons.menu, color: Colors.grey),
-                onPressed: () {
-                  // Navigate to the TransactionsPage
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => TransactionsPage()),
-                  );
-                },
-              ),
+            IconButton(
+              icon: Icon(Icons.menu, color: Colors.grey),
+              onPressed: () {
+                // Navigate to the TransactionsPage
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => TransactionsPage()),
+                );
+              },
             ),
           ],
         ),
